@@ -88,6 +88,20 @@ function RealTimeMap({ userLocation, routes = [], hazards = [], hospitals = [], 
           );
         })}
 
+        {/* Heatmap Layer - Rendered heavily beneath precise markers */}
+        {hazards.map((hazard) => (
+          <Circle
+            key={`heat-${hazard.id}`}
+            center={[hazard.coords[0], hazard.coords[1]]}
+            radius={hazard.severity === 'critical' ? 400 : hazard.severity === 'high' ? 300 : 200}
+            pathOptions={{
+              color: 'transparent',
+              fillColor: '#FF6F00',
+              fillOpacity: hazard.severity === 'critical' ? 0.5 : 0.3,
+            }}
+          />
+        ))}
+
         {/* Hazards */}
         {hazards.map((hazard) => (
           <Marker key={hazard.id} position={[hazard.coords[0], hazard.coords[1]]} icon={hazardIcon}>
@@ -180,4 +194,5 @@ function RealTimeMap({ userLocation, routes = [], hazards = [], hospitals = [], 
   );
 }
 
-export default RealTimeMap;
+// Export with React.memo to prevent expensive re-renders when parent state unrelated to map changes
+export default React.memo(RealTimeMap);

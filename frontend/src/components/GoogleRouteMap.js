@@ -11,7 +11,7 @@ const mapContainerStyle = {
 
 const defaultCenter = { lat: 12.9716, lng: 77.5946 }; // Bangalore
 
-export default function GoogleRouteMap({ origin, destination, isLoaded, selectedRouteIndex = 0, routes = [], userLocation, hospitals = [], policeStations = [] }) {
+const GoogleRouteMap = ({ origin, destination, isLoaded, selectedRouteIndex = 0, routes = [], userLocation, hospitals = [], policeStations = [] }) => {
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [activeMarker, setActiveMarker] = useState(null);
   
@@ -179,4 +179,7 @@ export default function GoogleRouteMap({ origin, destination, isLoaded, selected
       </GoogleMap>
     </div>
   );
-}
+};
+
+// Export with React.memo
+export default React.memo(GoogleRouteMap);

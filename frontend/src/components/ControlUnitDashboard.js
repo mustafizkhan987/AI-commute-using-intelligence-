@@ -26,6 +26,19 @@ function ControlUnitDashboard() {
     }
   };
 
+  const handleResolve = async (hazardId) => {
+    try {
+      const response = await fetch(`/api/hazard/${hazardId}/resolve`, {
+        method: 'PUT'
+      });
+      if (response.ok) {
+        setHazards(hazards.filter(h => h.id !== hazardId));
+      }
+    } catch (error) {
+      console.error('Failed to resolve hazard:', error);
+    }
+  };
+
   const chartData = [
     { time: '00:00', alerts: 2 },
     { time: '04:00', alerts: 1 },
@@ -166,6 +179,11 @@ function ControlUnitDashboard() {
                   <span className="severity-badge">{hazard.severity}</span>
                 </div>
                 <p className="description">{hazard.description}</p>
+                <button 
+                  onClick={() => handleResolve(hazard.id)} 
+                  style={{marginTop: '10px', background: '#3b82f6', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', width: '100%'}}>
+                  ✓ Resolve Hazard
+                </button>
               </div>
             ))
           )}

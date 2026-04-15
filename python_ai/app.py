@@ -2,11 +2,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from rl_router import CoordinateGridAI
 import math
+import requests
+import concurrent.futures
+from functools import lru_cache
 
 app = Flask(__name__)
 # Enable CORS so Node or React can hit this directly if necessary
 CORS(app)
 
+@lru_cache(maxsize=1024)
 def calc_distance_km(lat1, lon1, lat2, lon2):
     R = 6371 # Earth radius in km
     dLat = math.radians(lat2 - lat1)
@@ -26,22 +30,31 @@ def predict_route():
     origin = data.get('origin')
     destination = data.get('destination')
     hazards = data.get('hazards', [])
+    traffic = data.get('traffic', [])
     
     if not origin or not destination:
          return jsonify({"error": "Origin and Destination required"}), 400
          
+    # Fetch historical ML human-feedback from backend
+    try:
+        feedback_res = requests.get('http://localhost:5000/api/routes/ml-feedback', timeout=2)
+        ml_feedback = feedback_res.json() if feedback_res.status_code == 200 else []
+    except Exception:
+        ml_feedback = []
+         
     # Initialize our Mathematical Custom Predictor Model
     # Setting resolution to 25 creates a 25x25 geographic block net over the space
-    model = CoordinateGridAI(origin, data, hazards=hazards, resolution=25)
+    model = CoordinateGridAI(origin, data, hazards=hazards, traffic=traffic, ml_feedback=ml_feedback, resolution=25)
     
-    # 1. Predict Safest Route (Maximum fear of hazards)
-    safest_steps = model.solve_optimal_path(mode="safest")
-    
-    # 2. Predict Shortest Route (Ignores hazard risk natively to save physical time)
-    shortest_steps = model.solve_optimal_path(mode="shortest")
-    
-    # 3. Predict Balanced Route (Machine Optimization)
-    balanced_steps = model.solve_optimal_path(mode="balanced")
+    # Run predictions concurrently to massively boost calculation speed
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        future_safest = executor.submit(model.solve_optimal_path, "safest")
+        future_shortest = executor.submit(model.solve_optimal_path, "shortest")
+        future_balanced = executor.submit(model.solve_optimal_path, "balanced")
+        
+        safest_steps = future_safest.result()
+        shortest_steps = future_shortest.result()
+        balanced_steps = future_balanced.result()
     
     # Calculate physical distances
     base_dist = calc_distance_km(origin['lat'], origin['lon'], destination['lat'], destination['lon'])
@@ -82,5 +95,5 @@ def predict_route():
 
 if __name__ == '__main__':
     # Force run on 5001 so it doesn't collide with Node.js on 5000
-    print("🚀 Python AI Router Engine booting on port 5001...")
+    print("Python AI Router Engine booting on port 5001...")
     app.run(host='0.0.0.0', port=5001, debug=True)

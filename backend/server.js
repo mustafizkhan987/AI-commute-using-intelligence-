@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const WebSocket = require('ws');
 const http = require('http');
+const compression = require('compression');
 
 // Routes
 const apiRoutes = require('./routes/api');
@@ -21,6 +22,7 @@ const PORT = process.env.PORT || 5000;
 const WS_PORT = process.env.WS_PORT || 5001;
 
 // Optimized Middleware
+app.use(compression()); // GZIP payload compression to massively shrink network transfer
 app.use(cors({ origin: '*', credentials: true }));
 app.use(bodyParser.json({ limit: '10mb' })); // Optimized limit
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));

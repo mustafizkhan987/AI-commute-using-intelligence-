@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import RouteCard from './components/RouteCard';
 import RecommendationPanel from './components/RecommendationPanel';
 import GoogleRouteMap from './components/GoogleRouteMap';
-import RealTimeMap from './components/RealTimeMap';
-import WomensSafetyMode from './components/WomensSafetyMode';
-import ControlUnitDashboard from './components/ControlUnitDashboard';
-import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import { useJsApiLoader } from '@react-google-maps/api';
 import { FaRoute, FaShieldAlt, FaExclamationTriangle, FaClinicMedical, FaMapMarkedAlt, FaDesktop, FaCar, FaMapMarkerAlt } from 'react-icons/fa';
+import { useVoiceNavigation } from './utils/voiceNav';
 import './App.css';
+
+// Lazy load heavy components for Performance Boost
+const RealTimeMap = lazy(() => import('./components/RealTimeMap'));
+const WomensSafetyMode = lazy(() => import('./components/WomensSafetyMode'));
+const ControlUnitDashboard = lazy(() => import('./components/ControlUnitDashboard'));
 
 // Performance constants (outside component to prevent recreation)
 const getOrCreateUserId = () => {
@@ -103,6 +106,56 @@ function App() {
 
   const [simulateInterval, setSimulateInterval] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const { speak, stop } = useVoiceNavigation();
+
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState("");
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallBtn(false);
+      }
+      setDeferredPrompt(null);
+    }
+  };
+
+  const submitFeedback = async () => {
+    try {
+      await fetch('/api/routes/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origin: routeOrigin || userLocation,
+          destination: routeDest,
+          score: feedbackRating,
+          comments: feedbackComment
+        })
+      });
+
+      setShowFeedback(false);
+      alert('Thank you! The AI Route Engine has learned from your feedback.');
+    } catch (e) {
+      console.error(e);
+      setShowFeedback(false);
+    }
+  };
 
   // Custom Local Search Processor
   const handleLocalSearch = (query, isSource) => {
@@ -151,6 +204,7 @@ function App() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Fetch all dashboard data (optimized) ──────────────────────────────────
@@ -168,7 +222,7 @@ function App() {
       const targetOrigin = routeOrigin || userLocation;
 
       // Parallel fetch with Promise.all
-      const [routesRes, scoreRes, dashRes, hospRes, policeRes] = await Promise.all([
+      const [, scoreRes, dashRes, hospRes, policeRes] = await Promise.all([
         fetch('/api/v2/routes/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -252,11 +306,14 @@ function App() {
   );
 
   // ── Live Tracking Simulator Drone Engine ──
-  const toggleSimulation = () => {
+  const toggleSimulation = useCallback(() => {
     if (isSimulating) {
       clearInterval(simulateInterval);
       setSimulateInterval(null);
       setIsSimulating(false);
+      stop();
+      speak("Navigation ended. Please rate this route to help optimize future routing.");
+      setShowFeedback(true);
       return;
     }
 
@@ -269,17 +326,36 @@ function App() {
     if (steps.length === 0) return;
 
     setIsSimulating(true);
+    speak("Starting route. Proceed to the highlighted path.");
     let stepIdx = 0;
 
     const intervalId = setInterval(() => {
       if (stepIdx >= steps.length) {
         clearInterval(intervalId);
         setIsSimulating(false);
+        stop();
+        speak("Navigation ended. Please rate this route to help optimize future routing.");
+        setShowFeedback(true);
         return;
       }
       
       const loc = steps[stepIdx].location;
-      
+      // Check if there are hazards nearby to issue warning
+      const nearbyHazard = hazards.find(h => {
+          if (!h.coords) return false;
+          const dx = h.coords[0] - Number(loc.lat);
+          const dy = h.coords[1] - (Number(loc.lng || loc.lon));
+          return (Math.sqrt(dx*dx + dy*dy) * 111) < 0.5; // Within 500m
+      });
+
+      if (nearbyHazard && stepIdx % 5 === 0) {
+          speak(`Danger Zone approaching. ${nearbyHazard.type} reported ahead. Recalculating route safely.`);
+      } else if (stepIdx % 10 === 0 && stepIdx > 0) {
+          speak("Continue straight for the next kilometer.");
+      } else if (stepIdx === steps.length - 1) {
+          speak("You have arrived at your destination.");
+      }
+
       // Override the live GPS marker mathematically
       setUserLocation({
         lat: Number(loc.lat),
@@ -290,7 +366,7 @@ function App() {
     }, 1200); // Drone moves to next waypoint every 1.2 seconds
 
     setSimulateInterval(intervalId);
-  };
+  }, [isSimulating, scoredRoutes, hazards, simulateInterval, speak, stop]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -327,6 +403,15 @@ function App() {
         </nav>
 
         <div className="cp-sidebar-footer">
+          {showInstallBtn && (
+            <button
+              className="cp-nav-btn"
+              onClick={handleInstallClick}
+              style={{ background: '#1a73e8', color: '#fff', justifyContent: 'center', marginBottom: '10px' }}
+            >
+              ⬇️ Install App
+            </button>
+          )}
           <label className="cp-toggle-row">
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>👩 Women's Mode</span>
             <div
@@ -483,15 +568,17 @@ function App() {
         {/* ── Women's Safety Tab ── */}
         {activeTab === 'safety' && (
           <div className="cp-tab-content fade-in">
-            <WomensSafetyMode
-              womenMode={womenMode}
-              setWomenMode={setWomenMode}
-              userLocation={userLocation}
-              userId={userId}
-              policeStations={policeStations}
-              hospitals={hospitals}
-              onUpdate={handleUpdate}
-            />
+            <Suspense fallback={<div className="cp-loading-state">Loading interface...</div>}>
+              <WomensSafetyMode
+                womenMode={womenMode}
+                setWomenMode={setWomenMode}
+                userLocation={userLocation}
+                userId={userId}
+                policeStations={policeStations}
+                hospitals={hospitals}
+                onUpdate={handleUpdate}
+              />
+            </Suspense>
           </div>
         )}
 
@@ -603,20 +690,58 @@ function App() {
         {/* ── Live Map Tab ── */}
         {activeTab === 'map' && (
           <div className="cp-tab-content fade-in cp-map-wrapper">
-            <RealTimeMap
-              userLocation={userLocation}
-              hazards={hazards}
-              hospitals={hospitals}
-              policeStations={policeStations}
-              routes={scoredRoutes}
-            />
+            <Suspense fallback={<div className="cp-loading-state">Loading Map...</div>}>
+              <RealTimeMap
+                userLocation={userLocation}
+                hazards={hazards}
+                hospitals={hospitals}
+                policeStations={policeStations}
+                routes={scoredRoutes}
+              />
+            </Suspense>
           </div>
         )}
 
         {/* ── Control Unit Tab ── */}
         {activeTab === 'control' && (
           <div className="cp-tab-content fade-in">
-            <ControlUnitDashboard />
+            <Suspense fallback={<div className="cp-loading-state">Loading Dashboard...</div>}>
+              <ControlUnitDashboard />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ML Feedback Modal */}
+        {showFeedback && (
+          <div className="cp-modal-overlay" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div className="cp-modal-content" style={{background: '#fff', padding: '30px', borderRadius: '16px', maxWidth: '400px', width: '90%'}}>
+              <h2 style={{marginTop: 0, color: '#1a73e8'}}>Rate Navigation</h2>
+              <p>Did this route feel safe? Your feedback trains our AI engine.</p>
+              
+              <div style={{display: 'flex', justifyContent: 'space-between', margin: '20px 0'}}>
+                {[1, 2, 3, 4, 5].map(star => (
+                   <button 
+                     key={star} 
+                     onClick={() => setFeedbackRating(star)}
+                     style={{
+                       fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer',
+                       color: feedbackRating >= star ? '#f59e0b' : '#e5e7eb'
+                     }}
+                   >
+                     ★
+                   </button>
+                ))}
+              </div>
+              <textarea 
+                 value={feedbackComment} 
+                 onChange={e => setFeedbackComment(e.target.value)}
+                 placeholder="Any sketchy areas or dark roads?"
+                 style={{width: '100%', height: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '20px'}}
+              />
+              <button onClick={submitFeedback} style={{background: '#1a73e8', color: '#fff', border: 'none', padding: '12px', width: '100%', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>
+                Submit Feedback
+              </button>
+            </div>
           </div>
         )}
       </main>

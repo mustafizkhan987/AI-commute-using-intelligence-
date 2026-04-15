@@ -85,4 +85,4 @@ function RouteCard({ route, isRecommended, womenMode, getGradeColor, getSafetyLa
   );
 }
 
-export default RouteCard;
+export default React.memo(RouteCard);

@@ -1,0 +1,25 @@
+{
+  "routes": [
+    {
+      "id": "route_a",
+      "name": "Highway Express (I-95)",
+      "distance": 12.5,
+      "estimatedTime": 18,
+      "description": "Major highway via interstate"
+    },
+    {
+      "id": "route_b",
+      "name": "Downtown Arterials (5th Ave)",
+      "distance": 11.2,
+      "estimatedTime": 22,
+      "description": "Through city center with traffic lights"
+    },
+    {
+      "id": "route_c",
+      "name": "Surface Streets (Oak & Pine)",
+      "distance": 13.8,
+      "estimatedTime": 28,
+      "description": "Residential neighborhood route"
+    }
+  ]
+}

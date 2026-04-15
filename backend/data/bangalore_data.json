@@ -1,0 +1,266 @@
+{
+  "routes": [
+    {
+      "id": "route_bng_001",
+      "name": "Brigade Road to Koramangala",
+      "distance": 8.5,
+      "estimatedTime": 25,
+      "description": "Commercial area - moderate to heavy traffic",
+      "area": "Central Bangalore",
+      "coords": {
+        "start": [12.9352, 77.6245],
+        "end": [12.9352, 77.6400]
+      }
+    },
+    {
+      "id": "route_bng_002",
+      "name": "Whitefield to Indiranagar",
+      "distance": 15.2,
+      "estimatedTime": 35,
+      "description": "IT corridor - high traffic congestion",
+      "area": "East Bangalore",
+      "coords": {
+        "start": [12.9698, 77.7499],
+        "end": [12.9716, 77.6412]
+      }
+    },
+    {
+      "id": "route_bng_003",
+      "name": "Hebbal to Yelahanka",
+      "distance": 12.3,
+      "estimatedTime": 30,
+      "description": "Mixed residential-commercial",
+      "area": "North Bangalore",
+      "coords": {
+        "start": [13.0011, 77.5897],
+        "end": [13.1092, 77.6098]
+      }
+    },
+    {
+      "id": "route_bng_004",
+      "name": "MG Road to Richmond Road",
+      "distance": 3.2,
+      "estimatedTime": 15,
+      "description": "Central business district - nightlife area",
+      "area": "Central Bangalore",
+      "coords": {
+        "start": [12.9352, 77.6245],
+        "end": [12.973, 77.5992]
+      }
+    },
+    {
+      "id": "route_bng_005",
+      "name": "Silk Board to Sarjapur Road",
+      "distance": 18.5,
+      "estimatedTime": 45,
+      "description": "Electronics City stretch - heavy congestion",
+      "area": "South Bangalore",
+      "coords": {
+        "start": [12.9352, 77.6245],
+        "end": [12.7732, 77.7289]
+      }
+    }
+  ],
+  "hazards": [
+    {
+      "id": "hazard_001",
+      "type": "construction",
+      "location": "Jyothi Nivas College Road",
+      "severity": "high",
+      "status": "active",
+      "description": "Road widening work - lane blocked",
+      "coords": [13.0082, 77.5916],
+      "reportedAt": "2026-04-15T08:00:00Z"
+    },
+    {
+      "id": "hazard_002",
+      "type": "accident",
+      "location": "Phoenix Market City, Bangalore",
+      "severity": "critical",
+      "status": "active",
+      "description": "Multi-vehicle collision - emergency services on site",
+      "coords": [13.0007, 77.5916],
+      "reportedAt": "2026-04-15T09:15:00Z"
+    },
+    {
+      "id": "hazard_003",
+      "type": "waterlogging",
+      "location": "Kachiguda lake overflowing",
+      "severity": "medium",
+      "status": "active",
+      "description": "Road flooded near lake - detour advised",
+      "coords": [12.9648, 77.5982],
+      "reportedAt": "2026-04-15T07:30:00Z"
+    },
+    {
+      "id": "hazard_004",
+      "type": "broken_traffic_light",
+      "location": "Indiranagar Junction",
+      "severity": "high",
+      "status": "active",
+      "description": "Signal malfunction - manual traffic control on",
+      "coords": [12.9716, 77.6412],
+      "reportedAt": "2026-04-15T08:45:00Z"
+    }
+  ],
+  "hospitals": [
+    {
+      "id": "hosp_001",
+      "name": "Apollo Hospitals",
+      "location": "Koramangala",
+      "coordinates": [12.9352, 77.6245],
+      "phone": "+91 80-40615000",
+      "emergency": true,
+      "beds": 250,
+      "specialties": ["Trauma", "Cardiology", "Neurology", "Emergency"],
+      "distance_from_cbd": 3.5
+    },
+    {
+      "id": "hosp_002",
+      "name": "St. John's Medical College Hospital",
+      "location": "Koramangala",
+      "coordinates": [12.935, 77.6100],
+      "phone": "+91 80-40057777",
+      "emergency": true,
+      "beds": 500,
+      "specialties": ["Trauma", "Surgery", "General", "Emergency"],
+      "distance_from_cbd": 3.2
+    },
+    {
+      "id": "hosp_003",
+      "name": "Fortis Hospital",
+      "location": "Bannerghatta Road",
+      "coordinates": [12.8971, 77.6245],
+      "phone": "+91 80-40275275",
+      "emergency": true,
+      "beds": 350,
+      "specialties": ["Trauma", "Orthopedics", "Emergency"],
+      "distance_from_cbd": 6.5
+    },
+    {
+      "id": "hosp_004",
+      "name": "Manipal Hospital",
+      "location": "Whitefield",
+      "coordinates": [12.9698, 77.7499],
+      "phone": "+91 80-40400400",
+      "emergency": true,
+      "beds": 280,
+      "specialties": ["Trauma", "Cardiology", "Emergency"],
+      "distance_from_cbd": 12.8
+    },
+    {
+      "id": "hosp_005",
+      "name": "Sparsh Hospital",
+      "location": "Yeshwanthpur",
+      "coordinates": [13.0018, 77.5707],
+      "phone": "+91 80-23565500",
+      "emergency": true,
+      "beds": 120,
+      "specialties": ["General", "Emergency"],
+      "distance_from_cbd": 5.3
+    }
+  ],
+  "police_stations": [
+    {
+      "id": "ps_001",
+      "name": "Bangalore City Police HQ - Women's Safety Wing",
+      "location": "Cubbon Park",
+      "coordinates": [12.9901, 77.5957],
+      "phone": "+91 80-22868000",
+      "emergency_number": "100",
+      "women_helpline": "+91 1091",
+      "response_time_avg": "8 minutes",
+      "jurisdiction": "Central Bangalore"
+    },
+    {
+      "id": "ps_002",
+      "name": "Koramangala Police Station - Women's Cell",
+      "location": "Koramangala",
+      "coordinates": [12.9352, 77.6245],
+      "phone": "+91 80-25532233",
+      "emergency_number": "100",
+      "women_helpline": "+91 1091",
+      "response_time_avg": "6 minutes",
+      "jurisdiction": "Koramangala & surrounding areas"
+    },
+    {
+      "id": "ps_003",
+      "name": "Indiranagar Police Station - Women's Division",
+      "location": "Indiranagar",
+      "coordinates": [12.9716, 77.6412],
+      "phone": "+91 80-25411033",
+      "emergency_number": "100",
+      "women_helpline": "+91 1091",
+      "response_time_avg": "7 minutes",
+      "jurisdiction": "Indiranagar & East Bangalore"
+    },
+    {
+      "id": "ps_004",
+      "name": "Whitefield Police Station - Cyber Crime & Women's",
+      "location": "Whitefield",
+      "coordinates": [12.9698, 77.7499],
+      "phone": "+91 80-25111100",
+      "emergency_number": "100",
+      "women_helpline": "+91 1091",
+      "response_time_avg": "10 minutes",
+      "jurisdiction": "Whitefield & IT corridor"
+    },
+    {
+      "id": "ps_005",
+      "name": "Yelahanka Police Station - Women's Safety",
+      "location": "Yelahanka",
+      "coordinates": [13.1092, 77.6098],
+      "phone": "+91 80-23641313",
+      "emergency_number": "100",
+      "women_helpline": "+91 1091",
+      "response_time_avg": "9 minutes",
+      "jurisdiction": "North Bangalore"
+    }
+  ],
+  "crime_data": [
+    {
+      "id": "crime_001",
+      "type": "theft",
+      "area": "Koramangala",
+      "coordinates": [12.9352, 77.6245],
+      "timeOfDay": "night",
+      "severity": "medium",
+      "frequency": "occasional",
+      "date": "2026-04-14",
+      "safetyScore": 65
+    },
+    {
+      "id": "crime_002",
+      "type": "traffic_violation",
+      "area": "MG Road",
+      "coordinates": [12.9352, 77.6245],
+      "timeOfDay": "day",
+      "severity": "low",
+      "frequency": "frequent",
+      "date": "2026-04-15",
+      "safetyScore": 75
+    },
+    {
+      "id": "crime_003",
+      "type": "street_crime",
+      "area": "Shivajinagar",
+      "coordinates": [12.9845, 77.6255],
+      "timeOfDay": "late_night",
+      "severity": "high",
+      "frequency": "occasional",
+      "date": "2026-04-13",
+      "safetyScore": 45
+    },
+    {
+      "id": "crime_004",
+      "type": "harassment",
+      "area": "Brigade Road",
+      "coordinates": [12.9352, 77.6245],
+      "timeOfDay": "evening",
+      "severity": "medium",
+      "frequency": "sporadic",
+      "date": "2026-04-14",
+      "safetyScore": 55
+    }
+  ]
+}

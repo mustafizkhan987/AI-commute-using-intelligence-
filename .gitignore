@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables (keep .env.example, ignore real secrets)
+backend/.env
+frontend/.env
+.env
+.env.local
+.env.production
+
+# Build outputs
+frontend/build/
+frontend/dist/
+
+# Database files
+backend/db/*.db
+backend/db/*.sqlite
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

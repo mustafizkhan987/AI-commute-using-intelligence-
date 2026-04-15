@@ -178,12 +178,7 @@ class HazardManager {
       return [];
     }
   }
-      return result.rows;
-    } catch (error) {
-      console.error('Error fetching active hazards:', error);
-      return [];
-    }
-  }
+
 
   static async getHazardsByRoute(routeId) {
     try {

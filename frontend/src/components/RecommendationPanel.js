@@ -1,17 +1,15 @@
 import React from 'react';
 
-function RecommendationPanel({ recommendation, routes, getGradeColor }) {
-  const bestRoute = routes.find(r => r.routeId === recommendation.bestRoute);
+function RecommendationPanel({ recommendation, getGradeColor }) {
+  const bestRoute = recommendation;
 
   if (!bestRoute) return null;
 
-  const improvement = () => {
-    const otherScores = routes
-      .filter(r => r.routeId !== recommendation.bestRoute)
-      .map(r => r.compositeScore);
-    if (otherScores.length === 0) return 0;
-    return Math.max(...otherScores);
-  };
+  // Support both property shapes from different backend AI routes
+  const name = bestRoute.name || bestRoute.routeName || 'Recommended Route';
+  const recText = bestRoute.recommendation || 'Fastest and safest commute according to AI.';
+  const composite = bestRoute.composite || bestRoute.compositeScore || 0;
+  const scores = bestRoute.scores || {};
 
   return (
     <div className="recommendation-panel">
@@ -21,25 +19,25 @@ function RecommendationPanel({ recommendation, routes, getGradeColor }) {
 
       <div className="recommendation-content">
         <div className="recommendation-route">
-          <h3>{bestRoute.routeName}</h3>
-          <p className="recommendation-reason">{bestRoute.recommendation}</p>
+          <h3>{name}</h3>
+          <p className="recommendation-reason">{recText}</p>
         </div>
 
         <div className="improvement-metric">
-          <span className="label">Better than alternatives by</span>
-          <span className="value">
-            {(bestRoute.compositeScore - improvement()).toFixed(1)} points
+          <span className="label">AI Composite Score</span>
+          <span className="value" style={{ color: getGradeColor(composite) }}>
+            {Math.round(composite)} / 100
           </span>
         </div>
 
         <div className="recommendation-badges">
-          {bestRoute.scores.safety >= 75 && (
+          {scores.safety >= 75 && (
             <span className="badge safety">🛡️ Safe</span>
           )}
-          {bestRoute.scores.congestion <= 50 && (
+          {scores.congestion <= 50 && (
             <span className="badge traffic">🚗 Light Traffic</span>
           )}
-          {bestRoute.scores.reliability >= 75 && (
+          {scores.reliability >= 75 && (
             <span className="badge reliable">⏱️ Reliable</span>
           )}
         </div>

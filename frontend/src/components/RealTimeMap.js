@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import './RealTimeMap.css';
 
@@ -25,8 +25,22 @@ const policeIcon = new L.Icon({
   popupAnchor: [0, -32]
 });
 
-function RealTimeMap({ hazards = [], hospitals = [], policeStations = [] }) {
-  const bangaloreCenter = [12.9716, 77.5946];
+const userIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxNCIgZmlsbD0iIzFBNzNFOCIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjgiIGZpbGw9IndoaXRlIi8+PC9zdmc+',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16]
+});
+
+// Component to dynamically center the map
+function ChangeView({ center }) {
+  const map = useMap();
+  map.setView(center, map.getZoom());
+  return null;
+}
+
+function RealTimeMap({ userLocation, routes = [], hazards = [], hospitals = [], policeStations = [] }) {
+  const mapCenter = userLocation ? [userLocation.lat, userLocation.lon] : [12.9716, 77.5946];
   const mapContainerStyle = {
     width: '100%',
     height: '600px'
@@ -36,11 +50,43 @@ function RealTimeMap({ hazards = [], hospitals = [], policeStations = [] }) {
     <div className="realtime-map-container">
       <h3>🗺️ Real-Time Bangalore Map</h3>
       
-      <MapContainer center={bangaloreCenter} zoom={12} style={mapContainerStyle}>
+      <MapContainer center={mapCenter} zoom={13} style={mapContainerStyle} scrollWheelZoom={true}>
+        <ChangeView center={mapCenter} />
+        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
         />
+
+        {/* Current User Location */}
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lon]} icon={userIcon}>
+            <Popup>
+              <strong>You are here!</strong>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Render Routes */}
+        {routes.map((route, idx) => {
+          if (!route.steps || route.steps.length === 0) return null;
+          // Build polyline array from steps
+          const positions = route.steps.map(s => [s.location.lat, s.location.lng]);
+          // Include origin if possible
+          if (userLocation) {
+            positions.unshift([userLocation.lat, userLocation.lon]);
+          }
+          const isRecommended = idx === 0;
+          return (
+            <Polyline 
+              key={`route-${idx}`} 
+              positions={positions} 
+              color={isRecommended ? '#1a73e8' : '#9aa0a6'} // Primary blue for recommendation, gray for others
+              weight={isRecommended ? 6 : 4}
+              opacity={isRecommended ? 0.9 : 0.6}
+            />
+          );
+        })}
 
         {/* Hazards */}
         {hazards.map((hazard) => (
@@ -120,6 +166,14 @@ function RealTimeMap({ hazards = [], hospitals = [], policeStations = [] }) {
         <div className="legend-item">
           <span className="legend-icon" style={{ borderColor: '#44BD32', background: 'transparent' }}>⭕</span>
           <span>Safe Zone</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-icon" style={{ backgroundColor: '#1A73E8', borderRadius: '50%' }}>⚪</span>
+          <span>You</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-icon" style={{ backgroundColor: '#1A73E8', height: '6px', width: '24px', display: 'inline-block' }}></span>
+          <span>Route</span>
         </div>
       </div>
     </div>

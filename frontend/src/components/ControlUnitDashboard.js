@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { FaMapMarkerAlt, FaPhone, FaClock, FaCheckCircle, FaAlertTriangle } from 'react-icons/fa';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { FaPhone, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import './ControlUnitDashboard.css';
 
 function ControlUnitDashboard() {
   const [alerts, setAlerts] = useState([]);
   const [stats, setStats] = useState(null);
   const [hazards, setHazards] = useState([]);
-  const [selectedAlert, setSelectedAlert] = useState(null);
-  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchDashboardData();
@@ -27,36 +25,6 @@ function ControlUnitDashboard() {
       console.error('Error fetching dashboard data:', error);
     }
   };
-
-  const handleAlertResolved = async (alertId) => {
-    try {
-      await fetch(`/api/v2/control/alert/${alertId}/resolved`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'resolved' })
-      });
-      fetchDashboardData();
-      alert('✓ Alert marked as resolved');
-    } catch (error) {
-      console.error('Error resolving alert:', error);
-    }
-  };
-
-  const handleHazardResolved = async (hazardId) => {
-    try {
-      await fetch(`/api/v2/control/hazard/${hazardId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'resolved' })
-      });
-      fetchDashboardData();
-      alert('✓ Hazard marked as resolved');
-    } catch (error) {
-      console.error('Error resolving hazard:', error);
-    }
-  };
-
-  const filteredAlerts = filter === 'all' ? alerts : alerts.filter(a => a.status === filter);
 
   const chartData = [
     { time: '00:00', alerts: 2 },
@@ -89,7 +57,7 @@ function ControlUnitDashboard() {
       {/* Key Metrics */}
       <section className="metrics-section">
         <div className="metric-card total">
-          <FaAlertTriangle className="icon" />
+          <FaExclamationTriangle className="icon" />
           <div className="metric-content">
             <span className="label">Total Alerts (24h)</span>
             <span className="value">{stats?.total || 0}</span>
@@ -164,11 +132,11 @@ function ControlUnitDashboard() {
         </div>
 
         <div className="alerts-grid">
-          {filteredAlerts.length === 0 ? (
+          {alerts.length === 0 ? (
             <div className="no-data">✓ No alerts at this moment</div>
           ) : (
-            filteredAlerts.slice(0, 5).map(alert => (
-              <div key={alert.id} className="alert-card" onClick={() => setSelectedAlert(alert)}>
+            alerts.slice(0, 5).map(alert => (
+              <div key={alert.id} className="alert-card">
                 <div className="alert-header">
                   <span className="status-badge">{alert.status}</span>
                   <span className="severity-badge">{alert.severity}</span>

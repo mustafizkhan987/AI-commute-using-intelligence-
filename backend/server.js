@@ -75,7 +75,7 @@ app.use((err, req, res, next) => {
 });
 
 // WebSocket with optimization
-const wss = new WebSocket.Server({ server, port: WS_PORT });
+const wss = new WebSocket.Server({ port: WS_PORT });
 const clients = new Set();
 
 // WebSocket heartbeat to detect stale connections
@@ -197,8 +197,11 @@ async function startServer() {
       console.log(`╚══════════════════════════════════════════════════╝\n`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ Database initialization failed. Some features may not work. Error:', error.message);
+    // Continue starting server even if DB fails for UI testing
+    server.listen(PORT, () => {
+      console.log(`\n⚠️ Server started WITHOUT database connection on port ${PORT}`);
+    });
   }
 }
 

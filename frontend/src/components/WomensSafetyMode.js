@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPhone, FaMapMarkerAlt, FaShare, FaAlertCircle } from 'react-icons/fa';
+import { FaPhone, FaMapMarkerAlt, FaShare, FaExclamationCircle } from 'react-icons/fa';
 import './WomensSafetyMode.css';
 
 function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpdate }) {
@@ -8,35 +8,9 @@ function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpd
   const [countdownSeconds, setCountdownSeconds] = useState(3);
   const [isLocationSharing, setIsLocationSharing] = useState(false);
   const [shareLink, setShareLink] = useState(null);
-  const [trustedContacts, setTrustedContacts] = useState([]);
-  const [emergencyStats, setEmergencyStats] = useState(null);
+  const [trustedContacts] = useState([]);
 
-  useEffect(() => {
-    if (countdownSeconds === 0 && emergencyTriggered) {
-      handleConfirmEmergency();
-      setCountdownSeconds(3);
-    }
-  }, [countdownSeconds, emergencyTriggered]);
-
-  const handleSOSButton = async () => {
-    setShowSOSAnimation(true);
-    setEmergencyTriggered(true);
-    setCountdownSeconds(3);
-
-    const countdown = setInterval(() => {
-      setCountdownSeconds(prev => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(countdown);
-  };
-
-  const handleCancelEmergency = () => {
-    setEmergencyTriggered(false);
-    setShowSOSAnimation(false);
-    setCountdownSeconds(3);
-  };
-
-  const handleConfirmEmergency = async () => {
+  const handleConfirmEmergency = React.useCallback(async () => {
     try {
       const response = await fetch('/api/v2/women-safety/emergency', {
         method: 'POST',
@@ -67,7 +41,14 @@ function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpd
       console.error('❌ Error sending emergency alert:', error);
       alert('Failed to send emergency alert. Please call 1091 immediately.');
     }
-  };
+  }, [onUpdate, userId, userLocation]);
+
+  useEffect(() => {
+    if (countdownSeconds === 0 && emergencyTriggered) {
+      handleConfirmEmergency();
+      setCountdownSeconds(3);
+    }
+  }, [countdownSeconds, emergencyTriggered, handleConfirmEmergency]);
 
   const handleStartLocationSharing = async () => {
     try {
@@ -96,6 +77,24 @@ function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpd
     } catch (error) {
       console.error('❌ Error starting location sharing:', error);
     }
+  };
+
+  const handleSOSButton = async () => {
+    setShowSOSAnimation(true);
+    setEmergencyTriggered(true);
+    setCountdownSeconds(3);
+
+    const countdown = setInterval(() => {
+      setCountdownSeconds(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(countdown);
+  };
+
+  const handleCancelEmergency = () => {
+    setEmergencyTriggered(false);
+    setShowSOSAnimation(false);
+    setCountdownSeconds(3);
   };
 
   const handleStopLocationSharing = () => {
@@ -142,7 +141,7 @@ function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpd
       <div className="sos-button-container">
         <div className={`sos-button ${emergencyTriggered ? 'triggered' : ''} ${showSOSAnimation ? 'animate' : ''}`}
              onClick={emergencyTriggered ? handleCancelEmergency : handleSOSButton}>
-          <FaAlertCircle className="sos-icon" />
+          <FaExclamationCircle className="sos-icon" />
           <span className="sos-text">SOS</span>
           {emergencyTriggered && (
             <div className="countdown">{countdownSeconds}</div>
@@ -222,119 +221,4 @@ function WomensSafetyMode({ womenMode, setWomenMode, userLocation, userId, onUpd
 }
 
 export default WomensSafetyMode;
-      <div className="mode-toggle">
-        <label className="toggle-label">
-          <input
-            type="checkbox"
-            checked={womenMode}
-            onChange={(e) => setWomenMode(e.target.checked)}
-          />
-          <span className="toggle-text">
-            {womenMode ? '👩 Women\'s Safety Mode ON' : '👩 Enable Women\'s Safety Mode'}
-          </span>
-        </label>
-      </div>
 
-      {womenMode && (
-        <div className="safety-panel">
-          {/* Emergency Button */}
-          <button
-            className={`emergency-button ${emergencyTriggered ? 'triggered' : ''}`}
-            onClick={handleEmergencyButton}
-            disabled={emergencyTriggered}
-          >
-            {showSOSAnimation ? (
-              <>
-                <span className="sos-pulse"></span>
-                SOS ACTIVATED
-              </>
-            ) : (
-              <>
-                <span className="emergency-icon">🚨</span>
-                <span>EMERGENCY</span>
-              </>
-            )}
-          </button>
-
-          {/* Safety Information */}
-          <div className="safety-info">
-            <h4>📍 Your Safety Network</h4>
-
-            {/* Nearest Police Station */}
-            {nearestPoliceStation && (
-              <div className="safety-card police-card">
-                <div className="card-header">
-                  <h5>🚔 Nearest Police Station</h5>
-                  <span className="distance">{nearestPoliceStation.distanceKm}km away</span>
-                </div>
-                <div className="card-content">
-                  <p><strong>{nearestPoliceStation.name}</strong></p>
-                  <p className="location">📍 {nearestPoliceStation.location}</p>
-                  <div className="contact-buttons">
-                    <a href={`tel:${nearestPoliceStation.phone}`} className="phone-btn">
-                      📞 {nearestPoliceStation.phone}
-                    </a>
-                    <a href={`tel:${nearestPoliceStation.emergency_number}`} className="emergency-btn">
-                      🚨 {nearestPoliceStation.emergency_number}
-                    </a>
-                    <a href={`tel:${nearestPoliceStation.women_helpline}`} className="women-btn">
-                      👩 {nearestPoliceStation.women_helpline}
-                    </a>
-                  </div>
-                  <p className="response-time">⏱️ Average Response: {nearestPoliceStation.response_time_avg}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Nearest Hospital */}
-            {nearestHospital && (
-              <div className="safety-card hospital-card">
-                <div className="card-header">
-                  <h5>🏥 Nearest Hospital</h5>
-                  <span className="distance">{nearestHospital.distanceKm}km away</span>
-                </div>
-                <div className="card-content">
-                  <p><strong>{nearestHospital.name}</strong></p>
-                  <p className="location">📍 {nearestHospital.location}</p>
-                  <div className="contact-buttons">
-                    <a href={`tel:${nearestHospital.phone}`} className="phone-btn">
-                      📞 {nearestHospital.phone}
-                    </a>
-                    <p className="emergency-status">
-                      {nearestHospital.emergency ? '🚑 Emergency Services: Available' : 'No emergency services'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Safety Tips */}
-            <div className="safety-tips">
-              <h5>🛡️ Safety Tips</h5>
-              <ul>
-                <li>✓ Your location will be shared with emergency contacts</li>
-                <li>✓ Share your live location with trusted contacts</li>
-                <li>✓ Turn on emergency SOS if feeling unsafe</li>
-                <li>✓ Stay in well-lit, crowded areas</li>
-                <li>✓ Keep your phone charged</li>
-                <li>✓ Trust your instincts</li>
-              </ul>
-            </div>
-
-            {/* Trusted Contacts */}
-            <div className="trusted-contacts">
-              <h5>📱 Share Location With</h5>
-              <div className="contact-share-options">
-                <button className="share-btn">📲 Family</button>
-                <button className="share-btn">👥 Friends</button>
-                <button className="share-btn">📧 Email</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default WomensSafetyMode;
